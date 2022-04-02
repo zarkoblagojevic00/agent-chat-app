@@ -7,7 +7,7 @@
         <nav>
             <router-link to="/">Login</router-link>
             <router-link
-                class="register-link gradient-bg ease-in"
+                class="register-link gradient-bg transition-ease-in"
                 to="/register"
                 >Register</router-link
             >
@@ -28,6 +28,7 @@ export default {
     align-items: center;
     padding: 5px 10%;
     background: var(--background);
+    border-bottom: 2px var(--primary-dark) solid;
 }
 
 .logo-container {
@@ -48,7 +49,7 @@ nav a {
 }
 
 nav a.router-link-exact-active {
-    color: var(--blue);
+    color: var(--primary);
 }
 
 .register-link {
@@ -59,9 +60,9 @@ nav a.router-link-exact-active {
 
 .register-link:hover {
     background-image: linear-gradient(
-        45deg,
-        var(--darker-blue),
-        var(--darker-purple)
+        135deg,
+        var(--primary-dark),
+        var(--primary-comp-dark)
     );
     background-size: 100%;
 }
@@ -69,9 +70,9 @@ nav a.router-link-exact-active {
 a.register-link.router-link-exact-active {
     color: var(--white);
     background-image: linear-gradient(
-        45deg,
-        var(--darker-blue),
-        var(--darker-purple)
+        135deg,
+        var(--primary-dark),
+        var(--primary-comp-dark)
     );
 }
 </style>
