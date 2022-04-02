@@ -1,0 +1,33 @@
+:root {
+    --blue: #226aff;
+    --darker-blue: #2e539d;
+    --purple: #ae2eff;
+    --darker-purple: #6f249d;
+
+    --background: #1e2834;
+    --white: #fafafa
+}
+
+.gradient-bg {
+    background-image: linear-gradient(45deg, var(--blue), var(--purple));
+    background-size: 100%;
+    
+}
+
+.gradient-text {
+    background-color: var(--purple);
+    background-image: linear-gradient(45deg, var(--blue), var(--purple));
+    background-size: 100%;
+    -webkit-background-clip: text;
+    -moz-background-clip: text;
+    -webkit-text-fill-color: transparent; 
+    -moz-text-fill-color: transparent;
+}
+
+.ease-in {
+    -webkit-transition: all 0.25s ease-in;
+    -moz-transition:    all 0.25s ease-in;
+    -ms-transition:     all 0.25s ease-in;
+    -o-transition:      all 0.25s ease-in;
+    transition:         all 0.25s ease-in;
+}
