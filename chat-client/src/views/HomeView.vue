@@ -1,8 +1,8 @@
 <template>
     <div class="container whole-page">
         <!-- <img alt="Agent logo" src="../assets/agent-chat-logo-256.svg" /> -->
-        <vue-login></vue-login>
-        <vue-login-promo></vue-login-promo>
+        <vue-login class="login-position"></vue-login>
+        <vue-login-promo class="login-promo-position"></vue-login-promo>
     </div>
 </template>
 
@@ -52,5 +52,17 @@ export default {
         var(--primary-dark) 0%,
         var(--primary-comp-dark) 85%
     );
+}
+
+.login-position {
+    position: absolute;
+    top: 12%;
+    left: 10%;
+}
+
+.login-promo-position {
+    position: absolute;
+    top: 8%;
+    right: 10%;
 }
 </style>

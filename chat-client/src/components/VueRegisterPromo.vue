@@ -6,7 +6,7 @@
             Easy. Fast. Reliable. Secure.
         </div>
         <div class="login-promo-text-s gradient-text">
-            Connect with your friends.
+            Join us to share thoughts and experiences.
         </div>
     </div>
 </template>
@@ -28,7 +28,7 @@ export default {};
 }
 
 .login-promo-text-s {
-    margin-top: 1rem;
-    font-size: 1.4rem;
+    margin-top: 0.6rem;
+    font-size: 1.3rem;
 }
 </style>

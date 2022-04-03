@@ -1,6 +1,6 @@
 <template>
     <div class="login-container">
-        <div class="login-title-container">Login</div>
+        <div class="login-title-container">Register</div>
         <form class="form-wrapper">
             <div class="control-wrapper">
                 <span class="input-label">Username* </span>
@@ -21,16 +21,25 @@
                     placeholder="Enter your password"
                 />
             </div>
+            <div class="control-wrapper">
+                <span class="input-label">Confirm Password* </span>
+                <input
+                    class="control transition-ease"
+                    v-model="credentials.confirmPassword"
+                    type="password"
+                    placeholder="Confirm your password"
+                />
+            </div>
             <div class="submit-container">
                 <input
                     class="submit-button clickable primary-comp transition-ease-in"
                     type="submit"
-                    @click.prevent="login"
+                    @click.prevent="register"
                 />
             </div>
             <div class="not-registered">
-                Not yet registered? Register
-                <router-link class="not-registered-link" to="/register">
+                Already registered? Log in
+                <router-link class="not-registered-link" to="/">
                     here.</router-link
                 >
             </div>
@@ -42,26 +51,29 @@
 import SwalToast from "@/mixins/swal-toast.js";
 
 export default {
-    name: "VueLogin",
+    name: "VueRegister",
     mixins: [SwalToast],
     data() {
         return {
             credentials: {
                 username: "",
                 password: "",
+                confirmPassword: "",
             },
         };
     },
+
     mounted() {
         this.$refs.username.focus();
     },
+
     methods: {
-        login() {
+        register() {
             try {
                 this.validateInput();
                 this.toast.fire({
                     icon: "success",
-                    title: `Username: ${this.credentials.username}\nPassword: ${this.credentials.password}`,
+                    title: `Username: ${this.credentials.username}\nPassword: ${this.credentials.password}\nConfirmPassword: ${this.credentials.confirmPassword}`,
                 });
             } catch (error) {
                 this.handle(error);
@@ -69,10 +81,21 @@ export default {
         },
         validateInput() {
             this.validateFieldsEmpty();
+            this.validatePasswordsSame();
         },
         validateFieldsEmpty() {
-            if (this.credentials.username && this.credentials.password) return;
+            if (
+                this.credentials.username &&
+                this.credentials.password &&
+                this.credentials.confirmPassword
+            )
+                return;
             throw Error("You must provide all the required fields.");
+        },
+        validatePasswordsSame() {
+            if (this.credentials.password === this.credentials.confirmPassword)
+                return;
+            throw Error("Passwords must match.");
         },
         handle(error) {
             this.toast.fire({
