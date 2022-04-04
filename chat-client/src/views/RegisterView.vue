@@ -28,25 +28,25 @@ export default {
         120deg,
         var(--background) 50%,
         var(--primary-dark) 0%,
-        var(--darker-purple) 85%
+        var(--primary-comp-dark) 85%
     );
     background-image: -moz-linear-gradient(
         120deg,
         var(--background) 50%,
         var(--primary-dark) 0%,
-        var(--darker-purple) 85%
+        var(--primary-comp-dark) 85%
     );
     background-image: -ms-linear-gradient(
         120deg,
         var(--background) 50%,
         var(--primary-dark) 0%,
-        var(--darker-purple) 85%
+        var(--primary-comp-dark) 85%
     );
     background-image: -o-linear-gradient(
         120deg,
         var(--background) 50%,
         var(--primary-dark) 0%,
-        var(--darker-purple) 85%
+        var(--primary-comp-dark) 85%
     );
     background-image: linear-gradient(
         120deg,

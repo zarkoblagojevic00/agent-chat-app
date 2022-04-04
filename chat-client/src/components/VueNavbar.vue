@@ -6,6 +6,7 @@
         </div>
         <nav>
             <router-link to="/">Login</router-link>
+            <router-link to="/chat">Chat</router-link>
             <router-link class="register-link gradient-bg" to="/register"
                 >Register</router-link
             >

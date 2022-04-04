@@ -31,9 +31,4 @@ body {
     min-width: 100%;
     min-height: 100%;
 }
-
-nav a {
-    font-weight: bold;
-    color: #2c3e50;
-}
 </style>
