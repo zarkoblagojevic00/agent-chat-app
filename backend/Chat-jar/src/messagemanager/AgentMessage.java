@@ -19,13 +19,14 @@ public class AgentMessage implements Serializable {
 		REGISTER,
 		LOG_IN,
 		LOG_OUT,
-		
 		GET_REGISTERED,
 		GET_LOGGED_IN,
-//		SEND_MESSAGE_ALL,
-//		SEND_MESSAGE_USER,
+		
+		
+		SEND_MESSAGE_ALL,
+		SEND_MESSAGE_USER,
 		RECEIVE_MESSAGE,
-//		GET_MESSAGES
+		GET_MESSAGES, 
 	}
 	
 	private static final long serialVersionUID = 4750922547689000321L;

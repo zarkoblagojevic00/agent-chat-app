@@ -1,5 +1,6 @@
 package sessionmanager;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -12,8 +13,10 @@ import javax.ejb.Remote;
 import javax.ejb.Singleton;
 
 import agentmanager.AgentManagerRemote;
+import model.Message;
 import model.User;
 import model.UserWithHostDTO;
+import rest.dtos.NewMessageDTO;
 import sessionmanager.dtos.SessionInfoDTO;
 import util.JNDILookup;
 
@@ -77,6 +80,29 @@ public class SessionManagerBean implements SessionManagerRemote {
 		return true;
 	}
 	
+	@Override
+	public List<String> getLocalRecipients() {
+		return getLoggedInUsers().stream().map(UserWithHostDTO::getUsername).collect(Collectors.toList());
+	}
+	
+	@Override
+	public User getLoggedInUser(String username) {
+		return loggedIn.get(username);
+	}
+	
+	@Override
+	public Message unpackMessage(NewMessageDTO dto) {
+		User sender = getLoggedInUser(dto.getSender());
+		User recipient = dto.getRecipient().equals("all") ? new User("all", "") : getLoggedInUser(dto.getRecipient());
+		return new Message(sender, recipient, LocalDateTime.now(), dto.getSubject(), dto.getContent());
+	}
+
+	@Override
+	public List<String> getOtherLocalRecipients(String username) {
+		return getLocalRecipients().stream().filter(un -> !username.equals(un)).collect(Collectors.toList());
+	}
+
+	
 	private boolean isUsernameUnique(String username) {
 		return !registered.containsKey(username);
 	}
@@ -89,14 +115,17 @@ public class SessionManagerBean implements SessionManagerRemote {
 	}
 	
 	private List<UserWithHostDTO> mapUsersToUserWithHost(Map<String, User> users) {
-		return users.keySet().stream().map(username -> new UserWithHostDTO(username, getHostAlias())).collect(Collectors.toList());
+		return users.values().stream().map(this::mapUserToUserWithHost).collect(Collectors.toList());
 	}
 
+	private UserWithHostDTO mapUserToUserWithHost(User user) {
+		return new UserWithHostDTO(user.getUsername(), getHostAlias());
+	}
+	
 	private String getHostAlias() {
 		return "test@test";
 	}
-	
 
 	
-
+	
 }

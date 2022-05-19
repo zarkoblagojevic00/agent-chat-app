@@ -31,7 +31,7 @@ public abstract class JNDILookup {
 			+ Agent.class.getName() + "?stateful";
 	
 	public static final String MasterAgentLookup = JNDIPathChat + MasterAgent.class.getSimpleName() + "!"
-			+ Agent.class.getName() + "?stateful";
+			+ Agent.class.getName();
 
 	@SuppressWarnings("unchecked")
 	public static <T> T lookUp(String name, Class<T> c) {
