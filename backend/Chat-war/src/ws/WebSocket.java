@@ -14,7 +14,7 @@ import javax.websocket.server.ServerEndpoint;
 
 @Singleton
 @ServerEndpoint("/ws/{username}")
-public class WSChat {
+public class WebSocket {
 	private Map<String, Session> sessions = new HashMap<String, Session>();
 	
 	@OnOpen

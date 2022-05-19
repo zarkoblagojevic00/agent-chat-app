@@ -6,9 +6,9 @@ import javax.ejb.Remote;
 import javax.ejb.Stateful;
 
 import agentmanager.AgentManagerRemote;
-import chatmanager.ChatManagerRemote;
 import messagemanager.AgentMessage;
-import ws.WSChat;
+import sessionmanager.SessionManagerRemote;
+import ws.WebSocket;
 
 @Stateful
 @Remote(Agent.class)
@@ -20,11 +20,11 @@ public class UserAgent extends DiscreetAgent {
 	private static final long serialVersionUID = 1L;
 	
 	@EJB
-	private ChatManagerRemote chatManager;
+	private SessionManagerRemote chatManager;
 	@EJB
 	private AgentManagerRemote agentManager;
 	@EJB
-	private WSChat ws;
+	private WebSocket ws;
 
 	@PostConstruct
 	public void postConstruct() {

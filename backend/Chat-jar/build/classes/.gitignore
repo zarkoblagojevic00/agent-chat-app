@@ -1,8 +1,5 @@
-/META-INF/
-/agentmanager/
-/agents/
-/chatmanager/
-/messagemanager/
-/models/
-/rest/
 /util/
+/agents/
+/sessionmanager/
+/models/
+/model/

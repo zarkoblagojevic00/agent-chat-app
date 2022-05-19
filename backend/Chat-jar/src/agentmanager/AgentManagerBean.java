@@ -10,6 +10,7 @@ import javax.ejb.Remote;
 import javax.ejb.Singleton;
 
 import agents.Agent;
+import agents.MasterAgent;
 import util.JNDILookup;
 
 /**
@@ -24,7 +25,7 @@ public class AgentManagerBean implements AgentManagerRemote {
 	
     public AgentManagerBean() {
     	runningAgents = new HashMap<String, Agent>();
-    	startAgent("master", JNDILookup.MasterAgentLookup);
+    	startAgent(MasterAgent.MASTER_AGENT_ID, JNDILookup.MasterAgentLookup);
     }
 
     @Override

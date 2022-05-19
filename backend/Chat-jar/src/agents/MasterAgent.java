@@ -1,20 +1,21 @@
 package agents;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.ejb.EJB;
 import javax.ejb.Remote;
 import javax.ejb.Stateful;
 
-import agentmanager.AgentManagerRemote;
-import chatmanager.ChatManagerRemote;
 import messagemanager.AgentMessage;
 import messagemanager.MessageManagerRemote;
-import models.User;
-import util.JNDILookup;
-import ws.WSChat;
+import model.User;
+import model.UserWithHostDTO;
+import sessionmanager.SessionManagerRemote;
+import sessionmanager.dtos.SessionInfoDTO;
+import util.JsonMarshaller;
+import ws.WebSocket;
+import ws.WebSocketResponse;
 
 @Stateful
 @Remote(Agent.class)
@@ -25,74 +26,79 @@ public class MasterAgent extends DiscreetAgent {
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	private static final String WEB_SOCKET_NAME = "master";
+	private static final String WEB_SOCKET_MASTER_SESSION_ID = "master";
+	
+	public static final String MASTER_AGENT_ID = "master";
 
 	@EJB
-	private ChatManagerRemote chm;
+	private SessionManagerRemote sessionManager;
 	
 	@EJB
-	private AgentManagerRemote agm;
+	private MessageManagerRemote messageManager;
 	
 	@EJB
-	private WSChat ws;
+	private WebSocket ws;
 
 	@PostConstruct
 	public void postConstruct() {
 		System.out.println("Created Master Agent!");
 	}
 
-	protected MessageManagerRemote msm() {
-		return (MessageManagerRemote) JNDILookup.lookUp(JNDILookup.MessageManagerLookup, MessageManagerRemote.class);
-	}
-
 	@Override
 	protected void handleMessageDiscreetly(AgentMessage message) {
-		String option = "";
-		String response = "";
-		
 		switch (message.getType()) {
 		case REGISTER:
-			String username = (String) message.getArgument("username");
-			String password = (String) message.getArgument("password");
-
-			boolean result = chm.register(new User(username, password));
-			
-
-			response = "REGISTER!Registered: " + (result ? "Yes!" : "No!");
+			register(message);
 			break;
 		case LOG_IN:
-			username = (String) message.getArgument("username");
-			password = (String) message.getArgument("password");
-			result = chm.login(username, password);
-			
-			if (result) {
-				agm.startAgent(username, JNDILookup.UserAgentLookup);
-			}
-
-			response = "LOG_IN!Logged in: " + (result ? "Yes!" : "No!");
+			login(message);
 			break;
 		case GET_LOGGED_IN:
-			response = "LOGGEDIN!";
-			List<User> users = chm.loggedInUsers();
-			for (User u : users) {
-				response += u.toString() + "|";
-			}
+			getLoggedIn(message);
 			break;
-			
+		case GET_REGISTERED:
+			getRegistered(message);
+			break;
+		case LOG_OUT:
+			logout(message);
+			break;
 		default:
-			response = "ERROR!Option: " + option + " does not exist.";
+			ws.onMessage(WEB_SOCKET_MASTER_SESSION_ID, "Invalid option.");
 			break;
 		}
-		
-		List<String> recipients = chm.loggedInUsers().stream().map(User::getUsername).collect(Collectors.toList());
-		AgentMessage pingUserAgent = new AgentMessage(getAgentId(), AgentMessage.Type.RECEIVE_MESSAGE, recipients);
-		pingUserAgent.addArgument("message", response);
-		msm().post(pingUserAgent);
-		
-		ws.onMessage(WEB_SOCKET_NAME, response);
-		
-		System.out.println(response);
 	}
+
+	private void register(AgentMessage message) {
+		boolean success = sessionManager.register((User) message.getArgument("user"));
+		String response = JsonMarshaller.toJson(new WebSocketResponse(message.getType(), success, null));
+		ws.onMessage(WEB_SOCKET_MASTER_SESSION_ID, response);
+	}
+	
+	private void login(AgentMessage message) {
+		SessionInfoDTO dto = sessionManager.login((User) message.getArgument("user"));
+		String response = JsonMarshaller.toJson(new WebSocketResponse(message.getType(), dto != null , dto));
+		ws.onMessage(WEB_SOCKET_MASTER_SESSION_ID, response); 
+	}
+	
+	private void getLoggedIn(AgentMessage message) {
+		List<UserWithHostDTO> loggedIn = sessionManager.getLoggedInUsers();
+		String response = JsonMarshaller.toJson(new WebSocketResponse(message.getType(), true, loggedIn));
+		ws.onMessage(WEB_SOCKET_MASTER_SESSION_ID, response); 
+	}
+	
+	private void getRegistered(AgentMessage message) {
+		List<UserWithHostDTO> registered = sessionManager.getRegisteredUsers();
+		String response = JsonMarshaller.toJson(new WebSocketResponse(message.getType(), true, registered));
+		ws.onMessage(WEB_SOCKET_MASTER_SESSION_ID, response); 
+	}
+	
+	private void logout(AgentMessage message) {
+		String username = (String) message.getArgument("username");
+		boolean success = sessionManager.logout(username);
+		String response = JsonMarshaller.toJson(new WebSocketResponse(message.getType(), success, null));
+		ws.onMessage(WEB_SOCKET_MASTER_SESSION_ID, response); 
+	}
+
 
 	
 }
