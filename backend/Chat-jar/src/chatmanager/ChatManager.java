@@ -1,6 +1,7 @@
 package chatmanager;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,13 +21,22 @@ public class ChatManager {
 	
 	public ResponseMessageDTO sendMessage(Message message) {
 		String recipientUsername = message.getRecipient().getUsername();
-		addMessage(recipientUsername, message);
+		if (!recipientUsername.equals(ALL_CHAT)) {
+			addPrivateMessage(message, recipientUsername);
+		} else {
+			addAllChatMessage(message);
+		}
 		return mapMessageToResponseMessage(message);
 	}
 	
 	public ResponseMessageDTO receiveMessage(Message message) {
 		String senderUsername = message.getSender().getUsername();
-		addMessage(senderUsername, message);
+		String recipientUsername = message.getRecipient().getUsername();
+		if (!recipientUsername.equals(ALL_CHAT)) {
+			addPrivateMessage(message, senderUsername);
+		} else {
+			addAllChatMessage(message);
+		}
 		return mapMessageToResponseMessage(message);
 	}
 	
@@ -38,12 +48,12 @@ public class ChatManager {
 		return mapMessagesToResponseMessages(chats.get(username));
 	}
 	
-	private void addMessage(String username, Message message) {
-		if (username != ALL_CHAT) {
-			addPrivateMessage(message, username);
-		} else {
-			addAllChatMessage(message);
+	public List<ResponseMessageDTO> getAllUserMessages() {
+		List<ResponseMessageDTO> result = new ArrayList<>();
+		for (List<Message> list: chats.values()) {
+			result.addAll(mapMessagesToResponseMessages(list));
 		}
+		return Collections.unmodifiableList(result);
 	}
 	
 	private void addAllChatMessage(Message message) {
@@ -58,6 +68,9 @@ public class ChatManager {
 	}
 	
 	private List<ResponseMessageDTO> mapMessagesToResponseMessages(List<Message> messages) {
+		if (messages == null) {
+			return new ArrayList<>();
+		}
 		return messages.stream().map(this::mapMessageToResponseMessage).collect(Collectors.toList());
 	}
 	
@@ -70,6 +83,4 @@ public class ChatManager {
 				message.getCreated()
 		);
 	}
-	
-	
 }

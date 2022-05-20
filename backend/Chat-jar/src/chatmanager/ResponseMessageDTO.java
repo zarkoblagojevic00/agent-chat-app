@@ -2,6 +2,8 @@ package chatmanager;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 public class ResponseMessageDTO implements Serializable {
 
@@ -13,7 +15,7 @@ public class ResponseMessageDTO implements Serializable {
 	private String content;
 	private String sender;
 	private String recipient;
-	private LocalDateTime created;
+	private long created;
 	
 	public ResponseMessageDTO(String subject, String content, String sender, String recipient, LocalDateTime created) {
 		super();
@@ -21,7 +23,8 @@ public class ResponseMessageDTO implements Serializable {
 		this.content = content;
 		this.sender = sender;
 		this.recipient = recipient;
-		this.created = created;
+		ZonedDateTime zdt = created.atZone(ZoneId.of("Europe/Belgrade"));
+		this.created = zdt.toInstant().toEpochMilli();
 	}
 	
 	public static long getSerialversionuid() {
@@ -44,7 +47,7 @@ public class ResponseMessageDTO implements Serializable {
 		return recipient;
 	}
 	
-	public LocalDateTime getCreated() {
+	public long getCreated() {
 		return created;
 	}
 	

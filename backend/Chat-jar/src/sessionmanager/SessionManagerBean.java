@@ -92,9 +92,13 @@ public class SessionManagerBean implements SessionManagerRemote {
 	
 	@Override
 	public Message unpackMessage(NewMessageDTO dto) {
-		User sender = getLoggedInUser(dto.getSender());
-		User recipient = dto.getRecipient().equals("all") ? new User("all", "") : getLoggedInUser(dto.getRecipient());
+		User sender = parseUser(dto.getSender());
+		User recipient = parseUser(dto.getRecipient());
 		return new Message(sender, recipient, LocalDateTime.now(), dto.getSubject(), dto.getContent());
+	}
+
+	private User parseUser(String username) {
+		return username.equals("all") ? new User("all", "") : getLoggedInUser(username);
 	}
 
 	@Override

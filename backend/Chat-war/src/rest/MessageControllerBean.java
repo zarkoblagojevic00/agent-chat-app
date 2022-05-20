@@ -26,26 +26,28 @@ public class MessageControllerBean implements MessageController {
 
 	@Override
 	public void messageUser(NewMessageDTO message) {
-		// TODO Auto-generated method stub
-
+		AgentMessage agentMessage = new AgentMessage("rest_external", AgentMessage.Type.SEND_MESSAGE_USER, Arrays.asList(message.getSender()));
+		agentMessage.addArgument("payload", message);
+		messageManager.post(agentMessage);
 	}
 
 	@Override
 	public void getUserMessages(String username) {
-		// TODO Auto-generated method stub
-
+		AgentMessage agentMessage = new AgentMessage("rest_external", AgentMessage.Type.GET_ALL_MESSAGES, Arrays.asList(username));
+		messageManager.post(agentMessage);
 	}
 
 	@Override
 	public void getGlobalChat(String username) {
-		// TODO Auto-generated method stub
-
+		AgentMessage agentMessage = new AgentMessage("rest_external", AgentMessage.Type.GET_ALL_CHAT_MESSAGES, Arrays.asList(username));
+		messageManager.post(agentMessage);
 	}
 
 	@Override
 	public void getChatWithOtherUser(String username, String recipient) {
-		// TODO Auto-generated method stub
-
+		AgentMessage agentMessage = new AgentMessage("rest_external", AgentMessage.Type.GET_USER_CHAT_MESSAGES, Arrays.asList(username));
+		agentMessage.addArgument("chatWith", recipient);
+		messageManager.post(agentMessage);
 	}
 
 }

@@ -16,17 +16,20 @@ public class AgentMessage implements Serializable {
 	 * 
 	 */
 	public enum Type {
+		// master agent
 		REGISTER,
 		LOG_IN,
 		LOG_OUT,
 		GET_REGISTERED,
 		GET_LOGGED_IN,
 		
-		
+		// user agents
 		SEND_MESSAGE_ALL,
 		SEND_MESSAGE_USER,
 		RECEIVE_MESSAGE,
-		GET_MESSAGES, 
+		GET_ALL_MESSAGES, 
+		GET_ALL_CHAT_MESSAGES, 
+		GET_USER_CHAT_MESSAGES, 
 	}
 	
 	private static final long serialVersionUID = 4750922547689000321L;
@@ -48,7 +51,6 @@ public class AgentMessage implements Serializable {
 		this.type = type;
 	}
 	
-	
 	public AgentMessage(String sender, Type type, List<String> recepients) {
 		super();
 		this.sender = sender;
@@ -56,8 +58,6 @@ public class AgentMessage implements Serializable {
 		this.additionalArgs = new HashMap<>();
 		this.type = type;
 	}
-	
-	
 	
 	public String getSender() {
 		return sender;

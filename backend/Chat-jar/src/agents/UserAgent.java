@@ -1,5 +1,6 @@
 package agents;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -50,30 +51,73 @@ public class UserAgent extends DiscreetAgent {
 		case RECEIVE_MESSAGE:
 			receiveMessage(message);
 			break;
+		case SEND_MESSAGE_USER:
+			sendMessageToUser(message);
+			break;
 		case SEND_MESSAGE_ALL:
 			sendMessageToAll(message);
 			break;
+		case GET_ALL_MESSAGES:
+			getAllMessages();
+			break;
+			
+		case GET_ALL_CHAT_MESSAGES:
+			getAllChatMessages();
+			break;
+			
+		case GET_USER_CHAT_MESSAGES:
+			getUserChatMessages(message);
+			break;
+			
 		default:
 			ws.onMessage(getAgentId(), "Invalid option.");
 			break;
 		}
-	
 	}
 
 	private void receiveMessage(AgentMessage message) {
 		Message receivedMessage = (Message) message.getArgument("payload");
 		ResponseMessageDTO dto = chatManager.receiveMessage(receivedMessage);
-		ws.onMessage(getAgentId(), JsonMarshaller.toJson(new WebSocketResponse(message.getType(), true, dto)));
+		echoMessagesToWebsocket(Arrays.asList(dto));
 	}
 	
+	private void sendMessageToUser(AgentMessage message) {
+		Message parsedMessage = sessionManager.unpackMessage((NewMessageDTO) message.getArgument("payload"));
+		sendMessage(parsedMessage, Arrays.asList(parsedMessage.getRecipient().getUsername()));
+	}
+
 	private void sendMessageToAll(AgentMessage message) {
 		Message parsedMessage = sessionManager.unpackMessage((NewMessageDTO) message.getArgument("payload"));
-		List<String> forwardTo = sessionManager.getOtherLocalRecipients(getAgentId());
+		sendMessage(parsedMessage, sessionManager.getOtherLocalRecipients(getAgentId()));
+	}
+	
+	private void sendMessage(Message parsedMessage, List<String> forwardTo) {
 		AgentMessage forwardMessage = new AgentMessage(getAgentId(), AgentMessage.Type.RECEIVE_MESSAGE, forwardTo);
 		forwardMessage.addArgument("payload", parsedMessage);
 		messageManager.post(forwardMessage);
 		
 		ResponseMessageDTO wsMessage = chatManager.sendMessage(parsedMessage);
-		ws.onMessage(getAgentId(), JsonMarshaller.toJson(new WebSocketResponse(AgentMessage.Type.RECEIVE_MESSAGE, true, wsMessage)));
+		echoMessagesToWebsocket(Arrays.asList(wsMessage));
 	}
+	
+	private void getAllMessages() {
+		echoMessagesToWebsocket(chatManager.getAllUserMessages());
+	}
+	
+	private void getAllChatMessages() {
+		echoMessagesToWebsocket(chatManager.getAllChat());
+		
+	}
+
+	private void getUserChatMessages(AgentMessage message) {
+		String username = (String) message.getArgument("chatWith");
+		echoMessagesToWebsocket(chatManager.getChatWithUser(username));
+	}
+	
+	private void echoMessagesToWebsocket(List<ResponseMessageDTO> messages) {
+		WebSocketResponse webSocketResponse = new WebSocketResponse(AgentMessage.Type.RECEIVE_MESSAGE, true, messages);
+		ws.onMessage(getAgentId(), JsonMarshaller.toJson(webSocketResponse));
+	}
+
+	
 }
