@@ -101,65 +101,7 @@ export default {
             },
             agents: [],
             activeChatIdx: -1,
-            activeChatMessages: [
-                {
-                    sender: "John Doe",
-                    receiver: "Mark Markman",
-                    timestamp: new Date("2022-04-01T12:24:00"),
-                    subject: "Longer subject test for me",
-                    content:
-                        "Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae quidem debitis, beatae reprehenderit exercitationem nostrum deleniti explicabo cupiditate cum obcaecati. Facilis aperiam ratione voluptatum ",
-                },
-                {
-                    sender: "Mark Markman",
-                    receiver: "John Doe",
-                    timestamp: new Date("2022-04-01T12:25:00"),
-                    subject: "Longer subject test for me",
-                    content:
-                        "Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae quidem debitis, beatae reprehenderit exercitationem nostrum deleniti explicabo cupiditate cum obcaecati. Facilis aperiam ratione voluptatum ",
-                },
-                {
-                    sender: "Mark Markman",
-                    receiver: "John Doe",
-                    timestamp: new Date("2022-04-01T12:26:00"),
-                    subject: "Longer subject test for me",
-                    content:
-                        "Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae quidem debitis, beatae reprehenderit exercitationem nostrum deleniti explicabo cupiditate cum obcaecati. Facilis aperiam ratione voluptatum ",
-                },
-                {
-                    sender: "Mark Markman",
-                    receiver: "John Doe",
-                    timestamp: new Date("2022-04-01T12:35:00"),
-                    subject: "Longer subject test for me",
-                    content:
-                        "Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae quidem debitis, beatae reprehenderit exercitationem nostrum deleniti explicabo cupiditate cum obcaecati. Facilis aperiam ratione voluptatum ",
-                },
-                {
-                    sender: "John Doe",
-                    receiver: "Mark Markman",
-                    timestamp: new Date("2022-04-01T12:30:00"),
-                    subject: "Longer subject test for me",
-                    content:
-                        "Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae quidem debitis, beatae reprehenderit exercitationem nostrum deleniti explicabo cupiditate cum obcaecati. Facilis aperiam ratione voluptatum ",
-                },
-
-                {
-                    sender: "John Doe",
-                    receiver: "Mark Markman",
-                    timestamp: new Date("2022-04-01T12:36:00"),
-                    subject: "Longer subject test for me",
-                    content:
-                        "Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae quidem debitis, beatae reprehenderit exercitationem nostrum deleniti explicabo cupiditate cum obcaecati. Facilis aperiam ratione voluptatum ",
-                },
-                {
-                    sender: "John Doe",
-                    receiver: "Mark Markman",
-                    timestamp: new Date("2022-04-01T12:40:00"),
-                    subject: "Longer subject test for me",
-                    content:
-                        "Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae quidem debitis, beatae reprehenderit exercitationem nostrum deleniti explicabo cupiditate cum obcaecati. Facilis aperiam ratione voluptatum Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae quidem debitis, beatae reprehenderit exercitationem nostrum deleniti explicabo cupiditate cum obcaecati. Facilis aperiam ratione voluptatum Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae quidem debitis, beatae reprehenderit exercitationem nostrum deleniti explicabo cupiditate cum obcaecati. Facilis aperiam ratione voluptatum Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae quidem debitis, beatae reprehenderit exercitationem nostrum deleniti explicabo cupiditate cum obcaecati. Facilis aperiam ratione voluptatum Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae quidem debitis, beatae reprehenderit exercitationem nostrum deleniti explicabo cupiditate cum obcaecati. Facilis aperiam ratione voluptatum Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae quidem debitis, beatae reprehenderit exercitationem nostrum deleniti explicabo cupiditate cum obcaecati. Facilis aperiam ratione voluptatum Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae quidem debitis, beatae reprehenderit exercitationem nostrum deleniti explicabo cupiditate cum obcaecati. Facilis aperiam ratione voluptatum Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae quidem debitis, beatae reprehenderit exercitationem nostrum deleniti explicabo cupiditate cum obcaecati. Facilis aperiam ratione voluptatum Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae quidem debitis, beatae reprehenderit exercitationem nostrum deleniti explicabo cupiditate cum obcaecati. Facilis aperiam ratione voluptatum Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae quidem debitis, beatae reprehenderit exercitationem nostrum deleniti explicabo cupiditate cum obcaecati. Facilis aperiam ratione voluptatum Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae quidem debitis, beatae reprehenderit exercitationem nostrum deleniti explicabo cupiditate cum obcaecati. Facilis aperiam ratione voluptatum Lorem ipsum dolor sit amet consectetur adipisicing elit. Vitae quidem debitis, beatae reprehenderit exercitationem nostrum deleniti explicabo cupiditate cum obcaecati. Facilis aperiam ratione voluptatum ",
-                },
-            ],
+            activeChatMessages: [],
         };
     },
     created() {
@@ -278,12 +220,12 @@ export default {
 }
 
 .sidebar-user-info {
-    min-height: 75px;
+    min-height: 60px;
     border-bottom: 3px solid var(--background-lighter);
 
     display: flex;
     align-items: center;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     padding: 0 1em;
     color: var(--primary-comp);
 }
@@ -307,7 +249,7 @@ export default {
 
     display: flex;
     align-items: center;
-    font-size: 1.025rem;
+    font-size: 0.95rem;
     padding: 0 1em;
     color: var(--control-border-color-focused);
     cursor: pointer;
@@ -359,8 +301,9 @@ export default {
 .sidebar-chat-menu-agent-online {
     background: var(--primary-comp);
 }
+
 .sidebar-chat-menu-agent-offline {
-    background: #a97f32;
+    background: transparent;
 }
 
 .current-chat {
@@ -371,7 +314,7 @@ export default {
 }
 
 .current-chat-receiver-info {
-    min-height: 75px;
+    min-height: 60px;
     border-bottom: 3px solid var(--background-lighter);
 
     display: flex;
@@ -399,9 +342,11 @@ export default {
 .message-container {
     border: 2px solid var(--background-lighter);
     margin-bottom: 10px;
-    min-height: 80px;
-    max-width: 350px;
-    padding: 1em;
+    min-height: 75px;
+    min-width: 250px;
+    max-width: 550px;
+    padding: 0.75em 1em;
+    margin-bottom: 1em;
     color: var(--control-border-color);
 }
 
@@ -410,7 +355,7 @@ export default {
 }
 
 .logged-in-user-message-container {
-    border-radius: 1.5em 1.5em 0.1em 1.5em;
+    border-radius: 0.8em 0.8em 0.1em 0.8em;
     align-self: flex-end;
 
     background-image: -webkit-linear-gradient(
@@ -445,13 +390,14 @@ export default {
 }
 
 .other-user-message-container {
-    border-radius: 0.1em 1.5em 1.5em 1.5em;
+    border-radius: 0.1em 0.8em 0.8em 0.8em;
     align-self: flex-start;
     background: var(--background);
 }
 
 .message-container-subject {
     font-weight: 550;
+    font-size: 0.92rem;
     border-bottom: 2px solid var(--control-border-color-focused);
     padding-bottom: 0.25em;
     margin-bottom: 0.5em;
@@ -459,14 +405,16 @@ export default {
 
 .message-container-content {
     overflow-y: auto;
-    max-height: 600px;
+    font-size: 0.9rem;
+    text-align: justify;
+    max-height: 450px;
     border-bottom: 1px solid var(--control-border-color-focused);
-    padding-bottom: 0.9em;
+    padding: 0 0.75em 0.8em 0.2em;
     margin-bottom: 0.5em;
 }
 
 .message-container-timestamp {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     display: flex;
     justify-content: flex-end;
 }
@@ -491,7 +439,9 @@ export default {
 
 .control {
     background: transparent;
-    font-size: 1.2rem;
+    font-size: 0.95rem;
+    padding: 0.8em;
+
     color: var(--control-border-color);
 }
 
@@ -537,5 +487,19 @@ export default {
 .current-chat-send-message:focus {
     border: 2px solid var(--primary-comp);
     background-color: #213349;
+}
+
+/* For 1024 Resolution */
+@media screen and (min-device-width: 1200px) and (max-device-width: 1600px) and (-webkit-min-device-pixel-ratio: 1) {
+    .chat-container {
+        height: 100%;
+        margin: 0;
+        border-radius: 0;
+        border: 0;
+    }
+
+    .current-chat-messages-container {
+        min-height: 68%;
+    }
 }
 </style>

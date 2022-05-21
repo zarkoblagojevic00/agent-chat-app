@@ -49,6 +49,9 @@
 
 <script>
 import SwalToast from "@/mixins/swal-toast.js";
+import { initMasterWebsocketProxy } from "@/services/socket-proxy.js";
+import agentMessageType from "@/agent-message-type.js";
+import userService from "@/services/user-service.js";
 
 export default {
     name: "VueRegister",
@@ -71,10 +74,7 @@ export default {
         register() {
             try {
                 this.validateInput();
-                this.toast.fire({
-                    icon: "success",
-                    title: `Username: ${this.credentials.username}\nPassword: ${this.credentials.password}\nConfirmPassword: ${this.credentials.confirmPassword}`,
-                });
+                this.tryRegister();
             } catch (error) {
                 this.handle(error);
             }
@@ -97,11 +97,47 @@ export default {
                 return;
             throw Error("Passwords must match.");
         },
+        async tryRegister() {
+            initMasterWebsocketProxy(this.registerOnMessage());
+            try {
+                await userService.register({
+                    username: this.credentials.username,
+                    password: this.credentials.password,
+                });
+            } catch (error) {
+                this.handle(
+                    new Error(
+                        "We're sorry, we've had an issue. Please try again later."
+                    )
+                );
+            }
+        },
         handle(error) {
             this.toast.fire({
                 icon: "warning",
                 title: error.message,
             });
+        },
+        // must return a function because
+        // that is the only way that websocket onmessage callback can correctly use VueComponent as -this-
+
+        // -this- in arrow functions is always the same as
+        // -this- from a function which defines that arrow function
+        registerOnMessage() {
+            return (wsResponse) => {
+                if (wsResponse.response !== agentMessageType.register) return;
+                if (!wsResponse.success) {
+                    this.handle(
+                        Error("User with given username already exists.")
+                    );
+                    return;
+                }
+                this.toast.fire({
+                    icon: "success",
+                    title: `Username: ${this.credentials.username}\nPassword: ${this.credentials.password}\nConfirmPassword: ${this.credentials.confirmPassword}`,
+                });
+                this.$router.push({ name: "home" });
+            };
         },
     },
 };
