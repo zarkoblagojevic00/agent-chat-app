@@ -13,4 +13,8 @@ export default {
     getAllMessages: "GET_ALL_MESSAGES",
     getAllChatMessages: "GET_ALL_CHAT_MESSAGES",
     getUserChatMessages: "GET_USER_CHAT_MESSAGES",
+
+    otherUserLogin: "OTHER_USER_LOGIN",
+    otherUserRegister: "OTHER_USER_REGISTER",
+    otherUserLogout: "OTHER_USER_LOGOUT",
 };

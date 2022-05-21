@@ -72,34 +72,43 @@ public class MasterAgent extends DiscreetAgent {
 	}
 
 	private void register(AgentMessage message) {
-		boolean success = sessionManager.register((User) message.getArgument("user"));
+		User user = (User) message.getArgument("user");
+		boolean success = sessionManager.register(user);
 		String response = JsonMarshaller.toJson(new WebSocketResponse(message.getType(), success, null));
 		ws.onMessage(WEB_SOCKET_MASTER_SESSION_ID, response);
+		
+		informOthersOfUserActivity(AgentMessage.Type.OTHER_USER_REGISTER, user.getUsername());
+		
 	}
 	
 	private void login(AgentMessage message) {
-		SessionInfoDTO dto = sessionManager.login((User) message.getArgument("user"));
+		User user = (User) message.getArgument("user");
+		SessionInfoDTO dto = sessionManager.login(user);
 		String response = JsonMarshaller.toJson(new WebSocketResponse(message.getType(), dto != null , dto));
-		ws.onMessage(WEB_SOCKET_MASTER_SESSION_ID, response); 
+		ws.onMessage(WEB_SOCKET_MASTER_SESSION_ID, response);
+		
+		informOthersOfUserActivity(AgentMessage.Type.OTHER_USER_LOGIN, user.getUsername());
 	}
 	
 	private void getLoggedIn(AgentMessage message) {
 		List<UserWithHostDTO> loggedIn = sessionManager.getLoggedInUsers();
 		String response = JsonMarshaller.toJson(new WebSocketResponse(message.getType(), true, loggedIn));
-		ws.onMessage(WEB_SOCKET_MASTER_SESSION_ID, response); 
+		ws.onMessage((String) message.getArgument("username"), response); 
 	}
 	
 	private void getRegistered(AgentMessage message) {
 		List<UserWithHostDTO> registered = sessionManager.getRegisteredUsers();
 		String response = JsonMarshaller.toJson(new WebSocketResponse(message.getType(), true, registered));
-		ws.onMessage(WEB_SOCKET_MASTER_SESSION_ID, response); 
+		ws.onMessage((String) message.getArgument("username"), response); 
 	}
 	
 	private void logout(AgentMessage message) {
 		String username = (String) message.getArgument("username");
 		boolean success = sessionManager.logout(username);
 		String response = JsonMarshaller.toJson(new WebSocketResponse(message.getType(), success, null));
-		ws.onMessage(WEB_SOCKET_MASTER_SESSION_ID, response); 
+		ws.onMessage(WEB_SOCKET_MASTER_SESSION_ID, response);
+		
+		informOthersOfUserActivity(AgentMessage.Type.OTHER_USER_LOGOUT, username);
 	}
 	
 	private void sendMessageToAll(AgentMessage message) {
@@ -109,6 +118,14 @@ public class MasterAgent extends DiscreetAgent {
 //		messageManager.post(echo);
 	}
 	
+	
+	private void informOthersOfUserActivity(AgentMessage.Type activity, String username) {
+		List<String> otherLocalRecipients = sessionManager.getOtherLocalRecipients(username);
+		if (otherLocalRecipients.isEmpty()) return;
+		AgentMessage newInformation = new AgentMessage("master", activity, otherLocalRecipients);
+		newInformation.addArgument("activeUser", sessionManager.getUserWithHost(username));
+		messageManager.post(newInformation);
+	}
 	
 
 

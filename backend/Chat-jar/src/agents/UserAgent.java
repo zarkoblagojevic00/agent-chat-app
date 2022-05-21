@@ -13,6 +13,7 @@ import chatmanager.ResponseMessageDTO;
 import messagemanager.AgentMessage;
 import messagemanager.MessageManagerRemote;
 import model.Message;
+import model.UserWithHostDTO;
 import rest.dtos.NewMessageDTO;
 import sessionmanager.SessionManagerRemote;
 import util.JsonMarshaller;
@@ -69,12 +70,19 @@ public class UserAgent extends DiscreetAgent {
 			getUserChatMessages(message);
 			break;
 			
+		case OTHER_USER_LOGIN:
+		case OTHER_USER_LOGOUT:
+		case OTHER_USER_REGISTER:
+			informClientOfUserActivity(message);
+			break;
+			
 		default:
 			ws.onMessage(getAgentId(), "Invalid option.");
 			break;
 		}
 	}
 
+	
 	private void receiveMessage(AgentMessage message) {
 		Message receivedMessage = (Message) message.getArgument("payload");
 		ResponseMessageDTO dto = chatManager.receiveMessage(receivedMessage);
@@ -113,6 +121,12 @@ public class UserAgent extends DiscreetAgent {
 		String username = (String) message.getArgument("chatWith");
 		echoMessagesToWebsocket(chatManager.getChatWithUser(username));
 	}
+	
+	private void informClientOfUserActivity(AgentMessage message) {
+		WebSocketResponse webSocketResponse = new WebSocketResponse(message.getType(), true, (UserWithHostDTO) message.getArgument("activeUser"));
+		ws.onMessage(getAgentId(), JsonMarshaller.toJson(webSocketResponse));
+	}
+
 	
 	private void echoMessagesToWebsocket(List<ResponseMessageDTO> messages) {
 		WebSocketResponse webSocketResponse = new WebSocketResponse(AgentMessage.Type.RECEIVE_MESSAGE, true, messages);

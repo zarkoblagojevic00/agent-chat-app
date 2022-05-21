@@ -8,4 +8,8 @@ export default {
     login: async (user) => httpProxy.executeRequest("login", "POST", user),
     logout: async (username) =>
         httpProxy.executeRequest(`loggedIn/${username}`, "DELETE"),
+    getLoggedInUsers: async (username) =>
+        httpProxy.executeRequest(`loggedIn/${username}`, "GET"),
+    getRegisteredUsers: async (username) =>
+        httpProxy.executeRequest(`registered/${username}`, "GET"),
 };

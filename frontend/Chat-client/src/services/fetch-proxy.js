@@ -7,6 +7,6 @@ export default (resource) => ({
             headers: {
                 "Content-Type": "application/json",
             },
-            body: data ? JSON.stringify(data) : "",
+            ...(method !== "GET" && { body: JSON.stringify(data) }),
         }),
 });

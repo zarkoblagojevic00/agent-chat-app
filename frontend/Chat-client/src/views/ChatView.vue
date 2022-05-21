@@ -4,7 +4,14 @@
             <div class="sidebar-chat-menu">
                 <div class="sidebar-user-info">
                     <div class="user-icon"></div>
-                    <div>{{ loggedInUser }}</div>
+                    <div class="user-session-info-container">
+                        <span class="user-username">{{
+                            sessionInfo.username
+                        }}</span>
+                        <span class="user-host-alias">{{
+                            sessionInfo.hostAlias
+                        }}</span>
+                    </div>
                 </div>
                 <div class="sidebar-chat-menu-all-agents">
                     <div
@@ -24,14 +31,23 @@
                                     : 'sidebar-chat-menu-agent-offline'
                             "
                         ></div>
-                        {{ agent.name }}
+                        <div class="user-session-info-container">
+                            <span class="user-username">{{
+                                agent.username
+                            }}</span>
+                            <span
+                                v-if="agent.hostAlias"
+                                class="user-host-alias"
+                                >{{ agent.hostAlias }}</span
+                            >
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="current-chat">
                 <div class="current-chat-receiver-info">
                     <div class="current-chat-receiver-name">
-                        {{ agents[activeChatIdx].name }}
+                        {{ agents[activeChatIdx].username }}
                     </div>
                 </div>
                 <div class="current-chat-messages-container">
@@ -40,7 +56,7 @@
                         :key="idx"
                         class="message-container-wrapper"
                         :class="
-                            message.sender === loggedInUser
+                            message.sender === sessionInfo.username
                                 ? 'logged-in-user-message-container-position'
                                 : 'other-user-message-container-position'
                         "
@@ -48,7 +64,7 @@
                         <div
                             class="message-container"
                             :class="
-                                message.sender === loggedInUser
+                                message.sender === sessionInfo.username
                                     ? 'logged-in-user-message-container'
                                     : 'other-user-message-container'
                             "
@@ -87,11 +103,22 @@
 </template>
 
 <script>
+import sessionStorageProxy from "@/services/session-storage-proxy.js";
+import { initUserWebsocketProxy } from "@/services/socket-proxy";
+import userService from "@/services/user-service";
+import userWsHandler from "@/services/user-ws-handler.js";
+
 export default {
     name: "ChatView",
+    mixins: [userWsHandler],
     data() {
         return {
-            loggedInUser: "John Doe",
+            sessionInfo: {
+                username: "",
+                sessionId: "",
+                hostAlias: "",
+            },
+
             message: {
                 sender: "",
                 receiver: "",
@@ -99,22 +126,58 @@ export default {
                 subject: "",
                 content: "",
             },
-            agents: [],
+            registered: [],
+            loggedIn: [],
             activeChatIdx: -1,
             activeChatMessages: [],
         };
     },
+
+    computed: {
+        agents() {
+            let agents = this.otherRegistered.concat(this.otherLoggedIn);
+            const agentsObj = agents.reduce((prev, curr) => {
+                prev[curr.username] = curr;
+                return prev;
+            }, {});
+            const allChatAgent = {
+                username: "all",
+                hostAlias: "",
+                isActive: this.otherLoggedIn.length > 0,
+            };
+            agents = Object.values(agentsObj);
+            return [allChatAgent, ...agents];
+        },
+        otherLoggedIn() {
+            return this.loggedIn
+                .filter((a) => a.username !== this.sessionInfo.username)
+                .map((a) => ({
+                    username: a.username,
+                    hostAlias: a.hostAlias,
+                    isActive: true,
+                }));
+        },
+        otherRegistered() {
+            return this.registered
+                .filter((a) => a.username !== this.sessionInfo.username)
+                .map((a) => ({
+                    username: a.username,
+                    hostAlias: a.hostAlias,
+                    isActive: false,
+                }));
+        },
+    },
     created() {
+        this.sessionInfo = sessionStorageProxy.getSessionInfo();
+        initUserWebsocketProxy(
+            this.sessionInfo.sessionId,
+            this.requestChatOnOpen(),
+            this.chatOnMessage()
+        );
         this.activeChatIdx = 0;
-        this.agents = [
-            { name: "Mark Markman", isActive: true },
-            { name: "Steve Steveman", isActive: false },
-            { name: "Rene Renven", isActive: false },
-            { name: "Rita Goodall", isActive: true },
-        ];
         this.message = {
             sender: this.loggedInUser,
-            receiver: this.agents[this.activeChatIdx].name,
+            receiver: this.agents[this.activeChatIdx].username,
             timestamp: null,
             subject: "",
             content: "",
@@ -154,6 +217,26 @@ export default {
         },
         sortMessagesByTimestamps() {
             this.activeChatMessages.sort((a, b) => a.timestamp - b.timestamp);
+        },
+        requestChatOnOpen() {
+            return async () => {
+                try {
+                    await Promise.all([
+                        userService.getLoggedInUsers(this.sessionInfo.username),
+                        userService.getRegisteredUsers(
+                            this.sessionInfo.username
+                        ),
+                    ]);
+                } catch (err) {
+                    console.error(err);
+                }
+            };
+        },
+        chatOnMessage() {
+            return (wsResponse) => {
+                console.log(wsResponse);
+                this.wsHandler.handle(wsResponse);
+            };
         },
     },
 
@@ -227,7 +310,27 @@ export default {
     align-items: center;
     font-size: 1.1rem;
     padding: 0 1em;
+}
+
+.user-session-info-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     color: var(--primary-comp);
+}
+
+.user-username {
+    margin-right: 10px;
+}
+
+.user-host-alias {
+    color: #888;
+    font-size: 0.87rem;
+    padding: 0.2em 0.5em;
+    border-radius: 0.7em;
+    border: 1px solid var(--primary-comp);
+    font-style: italic;
+    background: var(--background-lighter);
 }
 
 .user-icon {

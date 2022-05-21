@@ -57,7 +57,7 @@ public class SessionManagerBean implements SessionManagerRemote {
 		loggedIn.put(user.getUsername(), user);
 		String username = user.getUsername();
 		agentManager.startAgent(username, JNDILookup.UserAgentLookup);
-		return new SessionInfoDTO(username, username);
+		return new SessionInfoDTO(username, username, getHostAlias());
 	}
 
 	@Override
@@ -128,6 +128,11 @@ public class SessionManagerBean implements SessionManagerRemote {
 	
 	private String getHostAlias() {
 		return "test@test";
+	}
+
+	@Override
+	public UserWithHostDTO getUserWithHost(String username) {
+		return mapUserToUserWithHost(registered.get(username));
 	}
 
 	

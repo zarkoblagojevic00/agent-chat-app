@@ -34,14 +34,16 @@ public class UserControllerBean implements UserController {
 	}
 
 	@Override
-	public void getloggedInUsers() {
+	public void getloggedInUsers(String username) {
 		AgentMessage message = new AgentMessage("rest_external", AgentMessage.Type.GET_LOGGED_IN, Arrays.asList(MasterAgent.MASTER_AGENT_ID));
+		message.addArgument("username", username);
 		messageManager.post(message);
 	}
 
 	@Override
-	public void getRegisteredUsers() {
+	public void getRegisteredUsers(String username) {
 		AgentMessage message = new AgentMessage("rest_external", AgentMessage.Type.GET_REGISTERED, Arrays.asList(MasterAgent.MASTER_AGENT_ID));
+		message.addArgument("username", username);
 		messageManager.post(message);
 	}
 

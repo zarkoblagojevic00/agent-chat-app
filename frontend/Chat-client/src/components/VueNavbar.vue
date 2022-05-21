@@ -32,10 +32,7 @@ export default {
     mixins: [SwalToast],
     data() {
         return {
-            sessionInfo: {
-                username: "",
-                sessionId: "",
-            },
+            sessionInfo: sessionStorageProxy.getSessionInfo(),
         };
     },
     mounted() {
@@ -46,7 +43,7 @@ export default {
     },
     computed: {
         userLoggedIn() {
-            return this.sessionInfo.username && this.sessionInfo.sessionId;
+            return this.sessionInfo;
         },
     },
     methods: {

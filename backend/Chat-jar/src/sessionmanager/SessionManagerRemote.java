@@ -16,6 +16,8 @@ public interface SessionManagerRemote {
 	public SessionInfoDTO login(User user);
 
 	public boolean register(User user);
+	
+	public UserWithHostDTO getUserWithHost(String username);
 
 	public List<UserWithHostDTO> getLoggedInUsers();
 	

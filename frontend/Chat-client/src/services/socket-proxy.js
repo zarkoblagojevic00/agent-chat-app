@@ -21,14 +21,22 @@ function getSelfClosingOnMessage(onMessage, socket) {
     };
 }
 
-export const initUserWebsocketProxy = (onMessage, username) => {
+export const initUserWebsocketProxy = (username, onOpen, onMessage) => {
     let socket = new WebSocket(getUserWebsocketPath(username));
     socket.onopen = () => {
         console.log(`Socket is open for user: ${username}`);
+        onOpen();
     };
     socket.onclose = () => {
         socket = null;
         console.log(`Socket is closed for user: ${username}`);
     };
-    socket.onmessage = onMessage;
+    socket.onmessage = getParsingOnMessage(onMessage);
 };
+
+function getParsingOnMessage(onMessage) {
+    return function (message) {
+        const wsResponse = JSON.parse(message.data);
+        onMessage(wsResponse);
+    };
+}

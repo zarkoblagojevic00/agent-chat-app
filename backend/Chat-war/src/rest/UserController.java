@@ -24,12 +24,12 @@ public interface UserController {
 	public void login(User user);
 	
 	@GET
-	@Path("/loggedIn")
-	public void getloggedInUsers();
+	@Path("/loggedIn/{username}")
+	public void getloggedInUsers(@PathParam("username") String username);
 	
 	@GET
-	@Path("/registered")
-	public void getRegisteredUsers();
+	@Path("/registered/{username}")
+	public void getRegisteredUsers(@PathParam("username") String username);
 	
 	@DELETE
 	@Path("loggedIn/{user}") 

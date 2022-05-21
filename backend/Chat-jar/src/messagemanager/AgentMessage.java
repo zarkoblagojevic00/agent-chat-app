@@ -29,7 +29,11 @@ public class AgentMessage implements Serializable {
 		RECEIVE_MESSAGE,
 		GET_ALL_MESSAGES, 
 		GET_ALL_CHAT_MESSAGES, 
-		GET_USER_CHAT_MESSAGES, 
+		GET_USER_CHAT_MESSAGES,
+		
+		OTHER_USER_LOGIN,
+		OTHER_USER_REGISTER,
+		OTHER_USER_LOGOUT,
 	}
 	
 	private static final long serialVersionUID = 4750922547689000321L;
