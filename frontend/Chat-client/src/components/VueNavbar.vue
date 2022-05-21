@@ -5,18 +5,97 @@
             <div class="app-name gradient-text">Agent Chat</div>
         </div>
         <nav>
-            <router-link to="/">Login</router-link>
-            <router-link to="/chat">Chat</router-link>
-            <router-link class="register-link gradient-bg" to="/register"
-                >Register</router-link
-            >
+            <div v-if="!userLoggedIn">
+                <router-link to="/">Login</router-link>
+                <router-link class="register-link gradient-bg" to="/register"
+                    >Register</router-link
+                >
+            </div>
+            <div v-else>
+                <button class="logout-button clickable danger" @click="logout">
+                    Logout
+                </button>
+            </div>
         </nav>
     </div>
 </template>
 
 <script>
+import SwalToast from "@/mixins/swal-toast.js";
+import { initMasterWebsocketProxy } from "@/services/socket-proxy.js";
+import agentMessageType from "@/agent-message-type";
+import userService from "@/services/user-service";
+import sessionStorageProxy from "@/services/session-storage-proxy.js";
+
 export default {
     name: "NavBar",
+    mixins: [SwalToast],
+    data() {
+        return {
+            sessionInfo: {
+                username: "",
+                sessionId: "",
+            },
+        };
+    },
+    mounted() {
+        addEventListener(
+            "user-logged-in",
+            (event) => (this.sessionInfo = event.detail.sessionInfo)
+        );
+    },
+    computed: {
+        userLoggedIn() {
+            return this.sessionInfo.username && this.sessionInfo.sessionId;
+        },
+    },
+    methods: {
+        logout() {
+            try {
+                this.tryLogout();
+            } catch (error) {
+                this.handle(error);
+            }
+        },
+        tryLogout() {
+            initMasterWebsocketProxy(
+                this.requestLogoutOnOpen(),
+                this.logoutOnMessage()
+            );
+        },
+        requestLogoutOnOpen() {
+            return async () => {
+                try {
+                    await userService.logout(this.sessionInfo.username);
+                } catch (error) {
+                    this.handle(
+                        new Error(
+                            "We're sorry, we've had an issue. Please try again later."
+                        )
+                    );
+                }
+            };
+        },
+        logoutOnMessage() {
+            return (wsResponse) => {
+                if (wsResponse.response !== agentMessageType.logout) return;
+                if (!wsResponse.success) {
+                    this.handle(
+                        Error("User with given username doesn't exists.")
+                    );
+                    return;
+                }
+                this.sessionInfo = {};
+                sessionStorageProxy.clearStorage();
+
+                this.toast.fire({
+                    icon: "success",
+                    title: `Your agent is down. Goodbye!`,
+                });
+                this.$router.push({ name: "home" });
+            };
+        },
+    },
 };
 </script>
 
@@ -72,6 +151,10 @@ a.register-link.router-link-exact-active {
         var(--primary-dark),
         var(--primary-comp-dark)
     );
+}
+
+.logout-button {
+    font-size: 0.9em;
 }
 
 @media screen and (min-device-width: 1200px) and (max-device-width: 1600px) and (-webkit-min-device-pixel-ratio: 1) {

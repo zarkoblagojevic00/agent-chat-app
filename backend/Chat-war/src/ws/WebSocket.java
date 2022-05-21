@@ -19,16 +19,19 @@ public class WebSocket {
 	
 	@OnOpen
 	public void onOpen(@PathParam("username") String username, Session session) {
+		System.out.println("Session opened for: " + username);
 		sessions.put(username, session);
 	}
 	
 	@OnClose
 	public void onClose(@PathParam("username") String username, Session session) {
+		System.out.println("Session closed for: " + username);
 		sessions.remove(username);
 	}
 	
 	@OnError
 	public void onError(@PathParam("username") String username, Session session, Throwable t) {
+		System.out.println("Session error for: " + username);
 		sessions.remove(username);
 		t.printStackTrace();
 	}

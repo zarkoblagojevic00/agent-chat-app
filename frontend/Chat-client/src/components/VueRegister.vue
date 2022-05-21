@@ -97,20 +97,11 @@ export default {
                 return;
             throw Error("Passwords must match.");
         },
-        async tryRegister() {
-            initMasterWebsocketProxy(this.registerOnMessage());
-            try {
-                await userService.register({
-                    username: this.credentials.username,
-                    password: this.credentials.password,
-                });
-            } catch (error) {
-                this.handle(
-                    new Error(
-                        "We're sorry, we've had an issue. Please try again later."
-                    )
-                );
-            }
+        tryRegister() {
+            initMasterWebsocketProxy(
+                this.requestRegistrationOnOpen(),
+                this.registerOnMessage()
+            );
         },
         handle(error) {
             this.toast.fire({
@@ -123,6 +114,23 @@ export default {
 
         // -this- in arrow functions is always the same as
         // -this- from a function which defines that arrow function
+        requestRegistrationOnOpen() {
+            return async () => {
+                try {
+                    await userService.register({
+                        username: this.credentials.username,
+                        password: this.credentials.password,
+                    });
+                } catch (error) {
+                    this.handle(
+                        new Error(
+                            "We're sorry, we've had an issue. Please try again later."
+                        )
+                    );
+                }
+            };
+        },
+
         registerOnMessage() {
             return (wsResponse) => {
                 if (wsResponse.response !== agentMessageType.register) return;

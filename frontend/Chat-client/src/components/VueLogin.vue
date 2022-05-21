@@ -40,6 +40,10 @@
 
 <script>
 import SwalToast from "@/mixins/swal-toast.js";
+import { initMasterWebsocketProxy } from "@/services/socket-proxy";
+import userService from "@/services/user-service";
+import agentMessageType from "@/agent-message-type";
+import sessionStorageProxy from "@/services/session-storage-proxy.js";
 
 export default {
     name: "VueLogin",
@@ -59,10 +63,7 @@ export default {
         login() {
             try {
                 this.validateInput();
-                this.toast.fire({
-                    icon: "success",
-                    title: `Username: ${this.credentials.username}\nPassword: ${this.credentials.password}`,
-                });
+                this.tryLogin();
             } catch (error) {
                 this.handle(error);
             }
@@ -74,11 +75,47 @@ export default {
             if (this.credentials.username && this.credentials.password) return;
             throw Error("You must provide all the required fields.");
         },
+        tryLogin() {
+            initMasterWebsocketProxy(
+                this.requestLoginOnOpen(),
+                this.loginOnMessage()
+            );
+        },
         handle(error) {
             this.toast.fire({
                 icon: "warning",
                 title: error.message,
             });
+        },
+        requestLoginOnOpen() {
+            return async () => {
+                try {
+                    await userService.login(this.credentials);
+                } catch (error) {
+                    this.handle(
+                        new Error(
+                            "We're sorry, we've had an issue. Please try again later."
+                        )
+                    );
+                }
+            };
+        },
+        loginOnMessage() {
+            return (wsResponse) => {
+                if (wsResponse.response !== agentMessageType.login) return;
+                if (!wsResponse.success) {
+                    this.handle(
+                        Error("User with given credentials doesn't exists.")
+                    );
+                    return;
+                }
+                sessionStorageProxy.storeSessionInfo(wsResponse.payload);
+                this.toast.fire({
+                    icon: "success",
+                    title: `Welcome 🎉🎉🎉. Your agent is warming up.`,
+                });
+                this.$router.push({ name: "chat" });
+            };
         },
     },
 };

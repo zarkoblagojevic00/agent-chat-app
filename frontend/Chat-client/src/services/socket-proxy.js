@@ -1,11 +1,12 @@
 import { getMasterWebsocketPath, getUserWebsocketPath } from "@/paths";
 
-export const initMasterWebsocketProxy = (onMessage) => {
+export const initMasterWebsocketProxy = (onOpen, onMessage) => {
     let socket = new WebSocket(getMasterWebsocketPath());
-    socket.onopen = function () {
+    socket.onopen = () => {
         console.log("Master Socket is open");
+        onOpen();
     };
-    socket.onclose = function () {
+    socket.onclose = () => {
         socket = null;
         console.log("Master Socket is closed");
     };
