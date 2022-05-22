@@ -16,12 +16,13 @@
                 <div class="sidebar-chat-menu-all-agents">
                     <div
                         v-for="(agent, idx) in agents"
-                        :key="agent"
+                        :key="idx"
                         class="sidebar-chat-menu-agent underline-container transition-ease-in"
                         :class="{
-                            'sidebar-chat-menu-active': idx === activeChatIdx,
+                            'sidebar-chat-menu-active':
+                                agent.username === this.newMessage.recipient,
                         }"
-                        @click="switchChat(idx)"
+                        @click="switchChatAndFocus(agent.username)"
                     >
                         <div
                             class="sidebar-chat-menu-agent-status"
@@ -45,9 +46,9 @@
                 </div>
             </div>
             <div class="current-chat">
-                <div class="current-chat-receiver-info">
-                    <div class="current-chat-receiver-name">
-                        {{ agents[activeChatIdx].username }}
+                <div class="current-chat-recipient-info">
+                    <div class="current-chat-recipient-name">
+                        {{ this.newMessage.recipient }}
                     </div>
                 </div>
                 <div class="current-chat-messages-container">
@@ -75,8 +76,20 @@
                             <div class="message-container-content">
                                 {{ message.content }}
                             </div>
-                            <div class="message-container-timestamp">
-                                {{ message.timestamp.toLocaleString("sr-RS") }}
+                            <div class="message-container-sender-timestamp">
+                                <div class="message-container-timestamp">
+                                    {{
+                                        new Date(
+                                            message.created
+                                        ).toLocaleString("sr-RS")
+                                    }}
+                                </div>
+                                <div
+                                    v-if="message.recipient === 'all'"
+                                    class="message-container-sender"
+                                >
+                                    From: {{ message.sender }}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -84,11 +97,18 @@
                 <form class="current-chat-enter-message-container">
                     <textarea
                         @keydown.enter.exact.prevent="sendMessage"
-                        ref="messageInput"
-                        class="current-chat-textarea control"
-                        name="chat-message"
-                        placeholder="Type a message"
-                        v-model="message.content"
+                        ref="messageSubject"
+                        class="current-chat-subject-textarea control"
+                        name="chat-message-subject"
+                        placeholder="Enter subject"
+                        v-model="newMessage.subject"
+                    ></textarea>
+                    <textarea
+                        @keydown.enter.exact.prevent="sendMessage"
+                        class="current-chat-content-textarea control"
+                        name="chat-message-content"
+                        placeholder="Type away..."
+                        v-model="newMessage.content"
                     ></textarea>
                     <input
                         class="current-chat-send-message transition-ease-in"
@@ -107,10 +127,13 @@ import sessionStorageProxy from "@/services/session-storage-proxy.js";
 import { initUserWebsocketProxy } from "@/services/socket-proxy";
 import userService from "@/services/user-service";
 import userWsHandler from "@/services/user-ws-handler.js";
+import chatManager from "@/services/chat-manager.js";
+import swalToast from "@/mixins/swal-toast.js";
+import messageService from "@/services/message-service";
 
 export default {
     name: "ChatView",
-    mixins: [userWsHandler],
+    mixins: [userWsHandler, chatManager, swalToast],
     data() {
         return {
             sessionInfo: {
@@ -119,17 +142,14 @@ export default {
                 hostAlias: "",
             },
 
-            message: {
+            newMessage: {
                 sender: "",
-                receiver: "",
-                timestamp: null,
+                recipient: "",
                 subject: "",
                 content: "",
             },
             registered: [],
             loggedIn: [],
-            activeChatIdx: -1,
-            activeChatMessages: [],
         };
     },
 
@@ -174,50 +194,65 @@ export default {
             this.requestChatOnOpen(),
             this.chatOnMessage()
         );
-        this.activeChatIdx = 0;
-        this.message = {
-            sender: this.loggedInUser,
-            receiver: this.agents[this.activeChatIdx].username,
-            timestamp: null,
+        this.newMessage = {
+            sender: this.sessionInfo.username,
+            recipient: "all",
             subject: "",
             content: "",
         };
-        this.sortMessagesByTimestamps();
     },
 
     mounted() {
-        this.focusMessageInput();
+        this.focusMessageSubject();
     },
+
     methods: {
-        focusMessageInput() {
-            this.$refs.messageInput.focus();
+        focusMessageSubject() {
+            this.$refs.messageSubject.focus();
         },
         sendMessage() {
-            // check valid message
-            if (!this.message.content.trim()) return;
+            try {
+                this.validateMessage();
+                this.trySendMessage();
+            } catch (error) {
+                this.handle(error);
+            }
+        },
 
-            this.message.timestamp = new Date();
+        validateMessage() {
+            if (
+                !this.newMessage.subject.trim() ||
+                !this.newMessage.content.trim()
+            ) {
+                throw Error("Both subject and content fields are necessary.");
+            }
+        },
 
-            // send message
-            console.log(this.message);
+        trySendMessage() {
+            this.sendMessageToHost(this.newMessage);
+            this.clearInput();
+            this.focusMessageSubject();
+        },
 
-            //clear input
-            this.message = {
-                sender: this.loggedInUser,
-                receiver: this.agents[this.activeChatIdx].name,
-                timestamp: null,
+        clearInput() {
+            const recipient = this.newMessage.recipient;
+            this.newMessage = {
+                sender: this.sessionInfo.username,
+                recipient,
                 subject: "",
                 content: "",
             };
         },
-        switchChat(idx) {
-            this.activeChatIdx = idx;
-            this.message.receiver = this.agents[this.activeChatIdx].name;
-            this.focusMessageInput();
+
+        // sortMessagesByTimestamps() {
+        //     this.activeChatMessages.sort((a, b) => a.timestamp - b.timestamp);
+        // },
+
+        switchChatAndFocus(username) {
+            this.switchChat(username);
+            this.focusMessageSubject();
         },
-        sortMessagesByTimestamps() {
-            this.activeChatMessages.sort((a, b) => a.timestamp - b.timestamp);
-        },
+
         requestChatOnOpen() {
             return async () => {
                 try {
@@ -226,17 +261,28 @@ export default {
                         userService.getRegisteredUsers(
                             this.sessionInfo.username
                         ),
+                        messageService.getAllMessagesForUser(
+                            this.sessionInfo.username
+                        ),
                     ]);
                 } catch (err) {
                     console.error(err);
                 }
             };
         },
+
         chatOnMessage() {
             return (wsResponse) => {
                 console.log(wsResponse);
                 this.wsHandler.handle(wsResponse);
             };
+        },
+
+        handle(error) {
+            this.toast.fire({
+                icon: "warning",
+                title: error.message,
+            });
         },
     },
 
@@ -416,7 +462,7 @@ export default {
     flex-direction: column;
 }
 
-.current-chat-receiver-info {
+.current-chat-recipient-info {
     min-height: 60px;
     border-bottom: 3px solid var(--background-lighter);
 
@@ -425,7 +471,7 @@ export default {
     padding: 0 2em;
 }
 
-.current-chat-receiver-name {
+.current-chat-recipient-name {
     font-size: 1.8rem;
     color: var(--control-border-color-focused);
 }
@@ -516,10 +562,12 @@ export default {
     margin-bottom: 0.5em;
 }
 
-.message-container-timestamp {
-    font-size: 0.8rem;
+.message-container-sender-timestamp {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    font-size: 0.8rem;
 }
 
 .current-chat-enter-message-container {
@@ -528,16 +576,23 @@ export default {
     justify-content: space-around;
     align-items: center;
     padding: 0 1em;
+    font-family: Avenir, Helvetica, Arial, sans-serif;
 }
 
-.current-chat-textarea {
-    min-width: 92%;
-    max-width: 92%;
+.current-chat-subject-textarea {
+    min-width: 23%;
+    max-width: 23%;
     min-height: 45px;
     max-height: 45px;
     resize: none;
+}
 
-    font-family: Avenir, Helvetica, Arial, sans-serif;
+.current-chat-content-textarea {
+    min-width: 70%;
+    max-width: 70%;
+    min-height: 45px;
+    max-height: 45px;
+    resize: none;
 }
 
 .control {

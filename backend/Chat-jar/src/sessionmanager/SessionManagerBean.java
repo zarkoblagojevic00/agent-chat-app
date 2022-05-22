@@ -50,7 +50,7 @@ public class SessionManagerBean implements SessionManagerRemote {
 
 	@Override
 	public SessionInfoDTO login(User user) {
-		if(!isUserRegistered(user)) {
+		if(!isUserRegistered(user) || isUserLoggedIn(user)) {
 			return null;
 		}
 		
@@ -58,6 +58,10 @@ public class SessionManagerBean implements SessionManagerRemote {
 		String username = user.getUsername();
 		agentManager.startAgent(username, JNDILookup.UserAgentLookup);
 		return new SessionInfoDTO(username, username, getHostAlias());
+	}
+
+	private boolean isUserLoggedIn(User user) {
+		return loggedIn.get(user.getUsername()) != null;
 	}
 
 	@Override

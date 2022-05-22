@@ -21,7 +21,7 @@
 </template>
 
 <script>
-import SwalToast from "@/mixins/swal-toast.js";
+import swalToast from "@/mixins/swal-toast.js";
 import { initMasterWebsocketProxy } from "@/services/socket-proxy.js";
 import agentMessageType from "@/agent-message-type";
 import userService from "@/services/user-service";
@@ -29,7 +29,7 @@ import sessionStorageProxy from "@/services/session-storage-proxy.js";
 
 export default {
     name: "NavBar",
-    mixins: [SwalToast],
+    mixins: [swalToast],
     data() {
         return {
             sessionInfo: sessionStorageProxy.getSessionInfo(),
@@ -82,7 +82,7 @@ export default {
                     );
                     return;
                 }
-                this.sessionInfo = {};
+                this.sessionInfo = null;
                 sessionStorageProxy.clearStorage();
 
                 this.toast.fire({
@@ -91,6 +91,12 @@ export default {
                 });
                 this.$router.push({ name: "home" });
             };
+        },
+        handle(error) {
+            this.toast.fire({
+                icon: "warning",
+                title: error.message,
+            });
         },
     },
 };

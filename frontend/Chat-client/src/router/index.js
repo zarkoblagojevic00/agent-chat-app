@@ -21,7 +21,7 @@ const routes = [
         component: ChatView,
         beforeEnter: () => {
             if (!sessionStorageProxy.isUserLoggedIn()) {
-                return { name: "login" };
+                return { name: "home" };
             }
         },
     },

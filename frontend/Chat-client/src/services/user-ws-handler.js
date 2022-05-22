@@ -24,6 +24,8 @@ export default {
                         this.handleOtherUserLogout,
                     [agentMessageType.otherUserRegister]:
                         this.handleOtherUserRegister,
+                    [agentMessageType.receiveMessage]:
+                        this.handleReceiveMessage,
                 },
             },
         };
@@ -45,6 +47,9 @@ export default {
         },
         handleOtherUserRegister(payload) {
             this.registered.push(payload);
+        },
+        handleReceiveMessage(payload) {
+            this.receiveMessages(payload);
         },
     },
 };

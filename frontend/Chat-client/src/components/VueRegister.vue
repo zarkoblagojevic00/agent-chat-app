@@ -142,7 +142,7 @@ export default {
                 }
                 this.toast.fire({
                     icon: "success",
-                    title: `Username: ${this.credentials.username}\nPassword: ${this.credentials.password}\nConfirmPassword: ${this.credentials.confirmPassword}`,
+                    title: `Your registration was successful. 👏👏👏`,
                 });
                 this.$router.push({ name: "home" });
             };
