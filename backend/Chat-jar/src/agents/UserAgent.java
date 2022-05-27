@@ -10,10 +10,13 @@ import javax.ejb.Stateful;
 
 import chatmanager.ChatManager;
 import chatmanager.ResponseMessageDTO;
+import connectionmanager.ConnectionManagerRemote;
 import messagemanager.AgentMessage;
 import messagemanager.MessageManagerRemote;
+import model.Host;
 import model.Message;
 import model.UserWithHostDTO;
+import rest.connection.restclient.clientproxies.MessageResteasyClientProxy;
 import rest.dtos.NewMessageDTO;
 import sessionmanager.SessionManagerRemote;
 import util.JsonMarshaller;
@@ -36,6 +39,9 @@ public class UserAgent extends DiscreetAgent {
 	
 	@EJB
 	private MessageManagerRemote messageManager;
+	
+	@EJB
+	private ConnectionManagerRemote connectionManager;
 	
 	@EJB
 	private WebSocket ws;
@@ -90,13 +96,35 @@ public class UserAgent extends DiscreetAgent {
 	}
 	
 	private void sendMessageToUser(AgentMessage message) {
-		Message parsedMessage = sessionManager.unpackMessage((NewMessageDTO) message.getArgument("payload"));
-		sendMessage(parsedMessage, Arrays.asList(parsedMessage.getRecipient().getUsername()));
+		NewMessageDTO dto = (NewMessageDTO) message.getArgument("payload");
+		Message parsedMessage = sessionManager.unpackMessage(dto);
+		
+		Host recipientHost = parsedMessage.getRecipient().getHost();
+		if (recipientHost.getAlias().equals(connectionManager.getCurrentNode().getAlias())) {
+			sendMessage(parsedMessage, Arrays.asList(parsedMessage.getRecipient().getUsername()));
+		} else {
+			String recipientAlias = "";
+			if (recipientHost.getMasterAlias() == null) {
+				recipientAlias = connectionManager.getCurrentNode().getMasterAlias();
+			} else {
+				recipientAlias = recipientHost.getAlias();
+			}
+			new MessageResteasyClientProxy(recipientAlias)
+			.performAction(rest -> rest.messageUserFromOtherNode(dto));
+		}
+		
 	}
 
 	private void sendMessageToAll(AgentMessage message) {
-		Message parsedMessage = sessionManager.unpackMessage((NewMessageDTO) message.getArgument("payload"));
+		NewMessageDTO dto = (NewMessageDTO) message.getArgument("payload");
+		Message parsedMessage = sessionManager.unpackMessage(dto);
 		sendMessage(parsedMessage, sessionManager.getOtherLocalRecipients(getAgentId()));
+		
+		for (String recipientAlias: connectionManager.getAllNodeAliases()) {
+			new MessageResteasyClientProxy(recipientAlias)
+			.performAction(rest -> rest.messageAllFromOtherNode(dto));
+		}
+		
 	}
 	
 	private void sendMessage(Message parsedMessage, List<String> forwardTo) {

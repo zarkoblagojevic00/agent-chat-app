@@ -37,4 +37,14 @@ public interface MessageController {
 	@GET
 	@Path("/chat/{username}/{recipient}")
 	public void getChatWithOtherUser(@PathParam("username") String username, @PathParam("recipient") String recipient);
+	
+	@POST
+	@Path("/all/other")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public void messageAllFromOtherNode(NewMessageDTO message);
+	
+	@POST
+	@Path("/user/other")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public void messageUserFromOtherNode(NewMessageDTO message);
 }

@@ -9,7 +9,7 @@
                             sessionInfo.username
                         }}</span>
                         <span class="user-host-alias">{{
-                            sessionInfo.hostAlias
+                            sessionInfo.hostAlias.split(":")[0]
                         }}</span>
                     </div>
                 </div>
@@ -39,7 +39,7 @@
                             <span
                                 v-if="agent.hostAlias && agent.isActive"
                                 class="user-host-alias"
-                                >{{ agent.hostAlias }}</span
+                                >{{ agent.hostAlias.split(":")[0] }}</span
                             >
                         </div>
                     </div>
