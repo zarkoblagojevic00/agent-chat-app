@@ -5,3 +5,6 @@
 /model/
 /messagemanager/
 /chatmanager/
+/agentmanager/
+/connectionmanager/
+/rest/

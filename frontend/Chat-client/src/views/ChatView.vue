@@ -27,7 +27,7 @@
                         <div
                             class="sidebar-chat-menu-agent-status"
                             :class="
-                                agents[idx].isActive
+                                agent.isActive
                                     ? 'sidebar-chat-menu-agent-online'
                                     : 'sidebar-chat-menu-agent-offline'
                             "
@@ -37,7 +37,7 @@
                                 agent.username
                             }}</span>
                             <span
-                                v-if="agent.hostAlias"
+                                v-if="agent.hostAlias && agent.isActive"
                                 class="user-host-alias"
                                 >{{ agent.hostAlias }}</span
                             >

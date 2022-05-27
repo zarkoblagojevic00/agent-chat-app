@@ -1,5 +1,6 @@
 package agents;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -62,8 +63,20 @@ public class MasterAgent extends DiscreetAgent {
 		case LOG_OUT:
 			logout(message);
 			break;
-		case SEND_MESSAGE_ALL:
-			sendMessageToAll(message);
+		case RECEIVE_REGISTERED_FROM_MASTER_NODE:
+			receiveRegisteredFromMasterNode(message);
+			break;
+		case RECEIVE_LOGGED_IN_FROM_MASTER_NODE:
+			receiveLoggedInFromMasterNode(message);
+			break;
+		case REGISTER_FROM_OTHER_NODE:
+			registerFromOtherNode(message);
+			break;
+		case LOG_IN_FROM_OTHER_NODE:
+			loginFromOtherNode(message);
+			break;
+		case LOG_OUT_FROM_OTHER_NODE:
+			logoutFromOtherNode(message);
 			break;
 		default:
 			ws.onMessage(WEB_SOCKET_MASTER_SESSION_ID, "Invalid option.");
@@ -71,14 +84,16 @@ public class MasterAgent extends DiscreetAgent {
 		}
 	}
 
+	
 	private void register(AgentMessage message) {
 		User user = (User) message.getArgument("user");
 		boolean success = sessionManager.register(user);
 		String response = JsonMarshaller.toJson(new WebSocketResponse(message.getType(), success, null));
 		ws.onMessage(WEB_SOCKET_MASTER_SESSION_ID, response);
-		
-		informOthersOfUserActivity(AgentMessage.Type.OTHER_USER_REGISTER, user.getUsername());
-		
+		informOthersOfUserActivity(
+				AgentMessage.Type.OTHER_USER_REGISTER, user.getUsername(), 
+				sessionManager.getOtherLocalRecipients(user.getUsername())
+		);
 	}
 	
 	private void login(AgentMessage message) {
@@ -86,8 +101,11 @@ public class MasterAgent extends DiscreetAgent {
 		SessionInfoDTO dto = sessionManager.login(user);
 		String response = JsonMarshaller.toJson(new WebSocketResponse(message.getType(), dto != null , dto));
 		ws.onMessage(WEB_SOCKET_MASTER_SESSION_ID, response);
+		informOthersOfUserActivity(
+				AgentMessage.Type.OTHER_USER_LOGIN, user.getUsername(), 
+				sessionManager.getOtherLocalRecipients(user.getUsername())
+		);
 		
-		informOthersOfUserActivity(AgentMessage.Type.OTHER_USER_LOGIN, user.getUsername());
 	}
 	
 	private void getLoggedIn(AgentMessage message) {
@@ -107,25 +125,48 @@ public class MasterAgent extends DiscreetAgent {
 		boolean success = sessionManager.logout(username);
 		String response = JsonMarshaller.toJson(new WebSocketResponse(message.getType(), success, null));
 		ws.onMessage(WEB_SOCKET_MASTER_SESSION_ID, response);
-		
-		informOthersOfUserActivity(AgentMessage.Type.OTHER_USER_LOGOUT, username);
+		informOthersOfUserActivity(AgentMessage.Type.OTHER_USER_LOGOUT, username, sessionManager.getOtherLocalRecipients(username));
 	}
 	
-	private void sendMessageToAll(AgentMessage message) {
-//		List<String> localRecipients = sessionManager.getLocalRecipients();
-//		AgentMessage echo = new AgentMessage(MASTER_AGENT_ID, AgentMessage.Type.RECEIVE_MESSAGE, localRecipients);
-//		echo.addArgument("payload", (NewMessageDTO) message.getArgument("payload"));
-//		messageManager.post(echo);
+	@SuppressWarnings("unchecked")
+	private void receiveRegisteredFromMasterNode(AgentMessage message) {
+		sessionManager.receiveRegisteredUsersFromMasterNode((ArrayList<User>) message.getArgument("users"));
+	}
+
+	@SuppressWarnings("unchecked")
+	private void receiveLoggedInFromMasterNode(AgentMessage message) {
+		sessionManager.receiveLoggedInUsersFromMasterNode((ArrayList<User>) message.getArgument("users"));
 	}
 	
+	private void registerFromOtherNode(AgentMessage message) {
+		User user = (User) message.getArgument("user");
+		boolean success = sessionManager.addRegisteredFromOtherNode(user);
+		if (!success) return;
+		informOthersOfUserActivity(AgentMessage.Type.OTHER_USER_REGISTER, user.getUsername(), sessionManager.getLocalRecipients());
+	}
+
+	private void loginFromOtherNode(AgentMessage message) {
+		User user = (User) message.getArgument("user");
+		boolean success = sessionManager.addLoggedInFromOtherNode(user);
+		if (!success) return;
+		informOthersOfUserActivity(AgentMessage.Type.OTHER_USER_LOGIN, user.getUsername(), sessionManager.getLocalRecipients());
+	}
+
+	private void logoutFromOtherNode(AgentMessage message) {
+		String username = (String) message.getArgument("username");
+		boolean success = sessionManager.logoutFromOtherNode(username);
+		if (!success) return;
+		informOthersOfUserActivity(AgentMessage.Type.OTHER_USER_LOGOUT, username, sessionManager.getLocalRecipients());
+	}
 	
-	private void informOthersOfUserActivity(AgentMessage.Type activity, String username) {
-		List<String> otherLocalRecipients = sessionManager.getOtherLocalRecipients(username);
-		if (otherLocalRecipients.isEmpty()) return;
-		AgentMessage newInformation = new AgentMessage("master", activity, otherLocalRecipients);
+	private void informOthersOfUserActivity(AgentMessage.Type activity, String username, List<String> others) {
+		if (others.isEmpty()) return;
+		AgentMessage newInformation = new AgentMessage(MASTER_AGENT_ID, activity, others);
 		newInformation.addArgument("activeUser", sessionManager.getUserWithHost(username));
 		messageManager.post(newInformation);
 	}
+
+
 	
 
 

@@ -1,6 +1,8 @@
 package rest;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
@@ -39,6 +41,20 @@ public class UserControllerBean implements UserController {
 		message.addArgument("username", username);
 		messageManager.post(message);
 	}
+	
+	@Override
+	public void receiveLoggedInUsersFromMasterNode(List<User> users) {
+		AgentMessage message = new AgentMessage("master_rest_external", AgentMessage.Type.RECEIVE_LOGGED_IN_FROM_MASTER_NODE, Arrays.asList(MasterAgent.MASTER_AGENT_ID));
+		message.addArgument("users", new ArrayList<User>(users));
+		messageManager.post(message);
+	}
+
+	@Override
+	public void receiveRegisteredUsersFromMasterNode(List<User> users) {
+		AgentMessage message = new AgentMessage("master_rest_external", AgentMessage.Type.RECEIVE_REGISTERED_FROM_MASTER_NODE, Arrays.asList(MasterAgent.MASTER_AGENT_ID));
+		message.addArgument("users", new ArrayList<User>(users));
+		messageManager.post(message);
+	}
 
 	@Override
 	public void getRegisteredUsers(String username) {
@@ -53,5 +69,28 @@ public class UserControllerBean implements UserController {
 		message.addArgument("username", username);
 		messageManager.post(message);
 	}
+
+	@Override
+	public void registerFromOtherNode(User user) {
+		AgentMessage message = new AgentMessage("rest_external", AgentMessage.Type.REGISTER_FROM_OTHER_NODE, Arrays.asList(MasterAgent.MASTER_AGENT_ID));
+		message.addArgument("user", user);
+		messageManager.post(message);
+	}
+
+	@Override
+	public void loginFromOtherNode(User user) {
+		AgentMessage message = new AgentMessage("rest_external", AgentMessage.Type.LOG_IN_FROM_OTHER_NODE, Arrays.asList(MasterAgent.MASTER_AGENT_ID));
+		message.addArgument("user", user);
+		messageManager.post(message);
+	}
+
+	@Override
+	public void logoutFromOtherNode(String username) {
+		AgentMessage message = new AgentMessage("rest_external", AgentMessage.Type.LOG_OUT_FROM_OTHER_NODE, Arrays.asList(MasterAgent.MASTER_AGENT_ID));
+		message.addArgument("username", username);
+		messageManager.post(message);
+	}
+
+	
 
 }

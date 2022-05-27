@@ -1,6 +1,8 @@
 package sessionmanager;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -13,9 +15,11 @@ import javax.ejb.Remote;
 import javax.ejb.Singleton;
 
 import agentmanager.AgentManagerRemote;
+import connectionmanager.ConnectionManagerRemote;
 import model.Message;
 import model.User;
 import model.UserWithHostDTO;
+import rest.connection.restclient.clientproxies.UserResteasyClientProxy;
 import rest.dtos.NewMessageDTO;
 import sessionmanager.dtos.SessionInfoDTO;
 import util.JNDILookup;
@@ -32,6 +36,9 @@ public class SessionManagerBean implements SessionManagerRemote {
 	@EJB
 	private AgentManagerRemote agentManager;
 	
+	@EJB
+	private ConnectionManagerRemote connectionManager;
+	
 	
 	/**
 	 * Default constructor.
@@ -44,20 +51,36 @@ public class SessionManagerBean implements SessionManagerRemote {
 		if (!isUsernameUnique(user.getUsername())) {
 			return false;
 		}
+		
 		registered.put(user.getUsername(), user);
+		
+		// inform other nodes of register
+		for (String nodeAlias: connectionManager.getAllNodeAliases()) {
+			new UserResteasyClientProxy(nodeAlias)
+			.performAction(rest -> rest.registerFromOtherNode(user));
+		}
 		return true;
 	}
 
 	@Override
 	public SessionInfoDTO login(User user) {
+		String username = user.getUsername();
+		
 		if(!isUserRegistered(user) || isUserLoggedIn(user)) {
 			return null;
 		}
 		
-		loggedIn.put(user.getUsername(), user);
-		String username = user.getUsername();
+		user.setHost(connectionManager.getCurrentNode());
+		loggedIn.put(username, user);
 		agentManager.startAgent(username, JNDILookup.UserAgentLookup);
-		return new SessionInfoDTO(username, username, getHostAlias());
+		
+		// inform other nodes of login
+		for (String nodeAlias: connectionManager.getAllNodeAliases()) {
+			new UserResteasyClientProxy(nodeAlias)
+			.performAction(rest -> rest.loginFromOtherNode(user));
+		}
+		
+		return new SessionInfoDTO(username, username, user.getHost().getAlias());
 	}
 
 	private boolean isUserLoggedIn(User user) {
@@ -81,12 +104,21 @@ public class SessionManagerBean implements SessionManagerRemote {
 		
 		loggedIn.remove(username);
 		agentManager.stopAgent(username);
+		
+		// inform other nodes of logout
+		for (String nodeAlias: connectionManager.getAllNodeAliases()) {
+			new UserResteasyClientProxy(nodeAlias)
+			.performAction(rest -> rest.logoutFromOtherNode(username));
+		}
+		
 		return true;
 	}
 	
 	@Override
 	public List<String> getLocalRecipients() {
-		return getLoggedInUsers().stream().map(UserWithHostDTO::getUsername).collect(Collectors.toList());
+		return getLoggedInUsers().stream()
+				.filter(uwh -> uwh.getHostAlias().equals(connectionManager.getCurrentNode().getAlias()))
+				.map(UserWithHostDTO::getUsername).collect(Collectors.toList());
 	}
 	
 	@Override
@@ -102,7 +134,7 @@ public class SessionManagerBean implements SessionManagerRemote {
 	}
 
 	private User parseUser(String username) {
-		return username.equals("all") ? new User("all", "") : getLoggedInUser(username);
+		return username.equals("all") ? new User("all", "", connectionManager.getCurrentNode()) : getLoggedInUser(username);
 	}
 
 	@Override
@@ -127,18 +159,60 @@ public class SessionManagerBean implements SessionManagerRemote {
 	}
 
 	private UserWithHostDTO mapUserToUserWithHost(User user) {
-		return new UserWithHostDTO(user.getUsername(), getHostAlias());
+		// only registered users don't have HOST 
+		User loggedInUser = loggedIn.get(user.getUsername());
+		String hostAlias = "";
+		if (loggedInUser != null) {
+			hostAlias = loggedInUser.getHost().getAlias();
+		}
+		return new UserWithHostDTO(user.getUsername(), hostAlias);
 	}
 	
-	private String getHostAlias() {
-		return "test@test";
-	}
-
 	@Override
 	public UserWithHostDTO getUserWithHost(String username) {
 		return mapUserToUserWithHost(registered.get(username));
 	}
 
+	@Override
+	public void receiveLoggedInUsersFromMasterNode(Collection<User> users) {
+		for (User user: users) {
+			loggedIn.put(user.getUsername(), user);
+		}
+	}
+
+	@Override
+	public void receiveRegisteredUsersFromMasterNode(Collection<User> users) {
+		for (User user: users) {
+			registered.put(user.getUsername(), user);
+		}
+	}
+
+	@Override
+	public ArrayList<User> getFullLoggedInUsers() {
+		return new ArrayList<User>(loggedIn.values());
+	}
 	
+	@Override
+	public ArrayList<User> getFullRegisteredUsers() {
+		return new ArrayList<User>(registered.values());
+	}
+
+	@Override
+	public boolean addRegisteredFromOtherNode(User user) {
+		registered.put(user.getUsername(), user);
+		return true;
+	}
+
+	@Override
+	public boolean addLoggedInFromOtherNode(User user) {
+		loggedIn.put(user.getUsername(), user);
+		return true;
+	}
+
+	@Override
+	public boolean logoutFromOtherNode(String username) {
+		loggedIn.remove(username);
+		return true;
+	}
 	
 }

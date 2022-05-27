@@ -1,5 +1,7 @@
 package sessionmanager;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.ejb.Remote;
@@ -21,6 +23,10 @@ public interface SessionManagerRemote {
 
 	public List<UserWithHostDTO> getLoggedInUsers();
 	
+	public ArrayList<User> getFullLoggedInUsers();
+	
+	public ArrayList<User> getFullRegisteredUsers();
+	
 	public List<UserWithHostDTO> getRegisteredUsers();
 	
 	public boolean logout(String username);
@@ -32,4 +38,14 @@ public interface SessionManagerRemote {
 	public Message unpackMessage(NewMessageDTO dto);
 
 	public List<String> getOtherLocalRecipients(String username);
+	
+	public void receiveLoggedInUsersFromMasterNode(Collection<User> users);
+	
+	public void receiveRegisteredUsersFromMasterNode(Collection<User> users);
+
+	public boolean addRegisteredFromOtherNode(User user);
+
+	public boolean addLoggedInFromOtherNode(User user);
+
+	public boolean logoutFromOtherNode(String username);
 }
