@@ -13,4 +13,5 @@ public interface ConnectionManagerRemote {
 	public List<String> getAllNodeAliases();
 	public List<Host> getAllNodes();
 	public Host getCurrentNode();
+	public Host getNode(String nodeAlias);
 }

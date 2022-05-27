@@ -38,10 +38,10 @@ public interface ConnectionController {
 	@Path("/node")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public void removeNode(String nodeAlias);
+	public void removeNode(Host node);
 	
 	@GET
-	@Path("/ping")
+	@Path("/node")
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public boolean ping();

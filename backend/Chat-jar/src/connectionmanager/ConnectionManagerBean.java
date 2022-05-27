@@ -33,8 +33,7 @@ public class ConnectionManagerBean implements ConnectionManagerRemote {
 
 	@Override
 	public void removeNode(String nodeAlias) {
-		// TODO Auto-generated method stub
-
+		nodes.remove(nodeAlias);
 	}
 
 	@Override
@@ -53,6 +52,11 @@ public class ConnectionManagerBean implements ConnectionManagerRemote {
 	@Override
 	public List<Host> getAllNodes() {
 		return Collections.unmodifiableList(new ArrayList<Host>(nodes.values()));
+	}
+
+	@Override
+	public Host getNode(String nodeAlias) {
+		return nodes.get(nodeAlias);
 	}
 
 }

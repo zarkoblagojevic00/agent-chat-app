@@ -111,6 +111,9 @@ public class UserAgent extends DiscreetAgent {
 			}
 			new MessageResteasyClientProxy(recipientAlias)
 			.performAction(rest -> rest.messageUserFromOtherNode(dto));
+			
+			ResponseMessageDTO wsMessage = chatManager.sendMessage(parsedMessage);
+			echoMessagesToWebsocket(Arrays.asList(wsMessage));
 		}
 		
 	}

@@ -214,5 +214,10 @@ public class SessionManagerBean implements SessionManagerRemote {
 		loggedIn.remove(username);
 		return true;
 	}
+
+	@Override
+	public void logOutAllUsersFromnode(String nodeAlias) {
+		loggedIn.values().removeIf(u -> u.getHost().getAlias().equals(nodeAlias));
+	}
 	
 }

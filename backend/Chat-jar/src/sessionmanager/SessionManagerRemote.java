@@ -48,4 +48,6 @@ public interface SessionManagerRemote {
 	public boolean addLoggedInFromOtherNode(User user);
 
 	public boolean logoutFromOtherNode(String username);
+
+	public void logOutAllUsersFromnode(String nodeAlias);
 }
